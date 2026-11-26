@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLive } from '../context/LiveContext.jsx';
+import { apiUrl } from '../lib/api.js';
 
 /** Fetches a leaderboard (public endpoint) and refreshes whenever scores change. */
 export function useLeaderboard(type, round) {
@@ -12,7 +13,7 @@ export function useLeaderboard(type, round) {
   useEffect(() => {
     const ctrl = new AbortController();
     const q = round ? `?round=${round}` : '';
-    fetch(`/api/public/leaderboard/${type}${q}`, { signal: ctrl.signal })
+    fetch(apiUrl(`/api/public/leaderboard/${type}${q}`), { signal: ctrl.signal })
       .then((r) => r.json())
       .then((d) => {
         setData(d);

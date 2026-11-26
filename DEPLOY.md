@@ -101,6 +101,16 @@ If the site shows **"Cannot GET /"** or **"The server is running, but the websit
   (`npm run seed -- --reset` wipes teams, questions and competitions first.)
 - Local and Render data are separate: your local `buzz_or_lose` database is **not** copied to Atlas. To move it, run `mongodump` locally and `mongorestore --uri "<atlas uri>"`.
 
+## Hosting the client on Vercel
+
+Socket.IO needs a persistent Node server; Vercel's serverless client deployment is not the Socket.IO server. Keep the backend on Render and configure the separate Vercel client to connect directly to it:
+
+1. In the Render service's **Environment**, set `CLIENT_ORIGIN` to your exact Vercel site origin (for example, `https://arena-main-neon.vercel.app`). For multiple client origins, separate them with commas.
+2. In Vercel's project **Environment Variables**, set `VITE_API_URL` to the Render service's origin (for example, `https://buzz-or-lose-arena.onrender.com`), with no trailing slash and no `/api`.
+3. Redeploy both services so the CORS and client build-time settings take effect.
+
+Without `VITE_API_URL`, the client uses its own origin for API and Socket.IO connections, which only works when the backend is served from that same origin.
+
 ## Event-day checklist
 
 - Open `/admin` and `/arena/live` once before the audience arrives, so a free-plan service has woken up.
