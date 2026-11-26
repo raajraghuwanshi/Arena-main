@@ -8,7 +8,7 @@ import path from 'node:path';
 import { config } from './config.js';
 import { requireAuth } from './middleware/auth.js';
 import { errorHandler } from './middleware/error.js';
-import { soundDir, videoDir } from './middleware/upload.mjs';
+import { soundDir, videoDir } from './middleware/upload.js';
 
 import authRoutes from './routes/auth.js';
 import teamRoutes from './routes/teams.js';
