@@ -1,111 +1,30 @@
 
 import multer from 'multer';
 import path from 'node:path';
-import fs from 'node:fs';
-import crypto from 'node:crypto';
 import { AppError } from '../utils/errors.js';
 
 const DATA_EXT = ['.csv', '.xlsx', '.pdf', '.txt'];
-const AUDIO_EXT = ['.mp3', '.wav', '.ogg', '.m4a', '.webm'];
-const VIDEO_EXT = ['.mp4', '.webm', '.mov', '.m4v'];
 
-// Vercel: use writable temporary filesystem.
-// Local development: use configured upload directory.
-const isVercel = process.env.VERCEL === '1';
-
-const uploadRoot = isVercel
-  ? path.join('/tmp', 'arena-uploads')
-  : path.resolve(process.cwd(), 'uploads');
-
-// Create upload directories
-const soundDir = path.join(uploadRoot, 'sounds');
-const videoDir = path.join(uploadRoot, 'videos');
-
-fs.mkdirSync(soundDir, { recursive: true });
-fs.mkdirSync(videoDir, { recursive: true });
-
-/** Team / question import: memory storage */
+/**
+ * Team / question imports.
+ * Files are processed in memory.
+ * No disk storage required.
+ */
 export const dataUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
-  fileFilter: (_req, file, cb) => {
-    const e = path.extname(file.originalname).toLowerCase();
-
-    if (!DATA_EXT.includes(e)) {
-      return cb(
-        new AppError('Only .csv, .xlsx or .pdf files are allowed.', 415)
-      );
-    }
-
-    cb(null, true);
-  },
-});
-
-/** Audio uploads */
-export const soundUpload = multer({
-  storage: multer.diskStorage({
-    destination: soundDir,
-    filename: (_req, file, cb) => {
-      const e = path.extname(file.originalname).toLowerCase();
-
-      const base = path
-        .basename(file.originalname, e)
-        .replace(/[^a-z0-9-_]+/gi, '-')
-        .slice(0, 40)
-        .toLowerCase();
-
-      cb(
-        null,
-        `${base || 'sound'}-${crypto.randomBytes(3).toString('hex')}${e}`
-      );
-    },
-  }),
-
-  limits: { fileSize: 8 * 1024 * 1024, files: 1 },
-
-  fileFilter: (_req, file, cb) => {
-    const e = path.extname(file.originalname).toLowerCase();
-
-    if (
-      !AUDIO_EXT.includes(e) ||
-      !/^audio\/|^video\/webm/.test(file.mimetype)
-    ) {
-      return cb(
-        new AppError(
-          'Only audio files (.mp3, .wav, .ogg, .m4a, .webm) are allowed.',
-          415
-        )
-      );
-    }
-
-    cb(null, true);
-  },
-});
-
-/** Video uploads */
-export const videoUpload = multer({
-  storage: multer.diskStorage({
-    destination: videoDir,
-    filename: (_req, file, cb) => {
-      cb(
-        null,
-        `final-${Date.now()}-${crypto.randomBytes(4).toString('hex')}${path.extname(file.originalname).toLowerCase()}`
-      );
-    },
-  }),
 
   limits: {
-    fileSize: 1024 * 1024 * 1024,
+    fileSize: 5 * 1024 * 1024,
     files: 1,
   },
 
   fileFilter: (_req, file, cb) => {
-    const e = path.extname(file.originalname).toLowerCase();
+    const ext = path.extname(file.originalname).toLowerCase();
 
-    if (!VIDEO_EXT.includes(e) || !/^video\//.test(file.mimetype)) {
+    if (!DATA_EXT.includes(ext)) {
       return cb(
         new AppError(
-          'Only video files (.mp4, .webm, .mov, .m4v) are allowed.',
+          'Only .csv, .xlsx or .pdf files are allowed.',
           415
         )
       );
@@ -114,5 +33,3 @@ export const videoUpload = multer({
     cb(null, true);
   },
 });
-
-export { soundDir, AUDIO_EXT, videoDir };
