@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import fs from 'node:fs';
 import path from 'node:path';
 import { config } from './config.js';
+import { connectDB } from './db.js';
 import { requireAuth } from './middleware/auth.js';
 import { errorHandler } from './middleware/error.js';
 import authRoutes from './routes/auth.js';
@@ -22,6 +23,14 @@ export function createApp() {
   app.use(express.json({ limit: '2mb' }));
 
   app.get('/api/health', (_req, res) => res.json({ ok: true, time: Date.now() }));
+  app.use('/api', async (_req, _res, next) => {
+    try {
+      await connectDB();
+      next();
+    } catch (error) {
+      next(error);
+    }
+  });
   app.use('/api/auth', authRoutes);
   app.use('/api/public', publicRoutes);
   app.use('/api/teams', requireAuth, teamRoutes);
