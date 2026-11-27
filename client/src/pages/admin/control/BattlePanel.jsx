@@ -235,7 +235,7 @@ export default function BattlePanel({ state, buzzerKey }) {
             {ph === 'buzz_open' && 'Buzzers open — press the buzzing team (A / L) or use the podium buzzers.'}
             {ph === 'no_buzz' && (live.stage === 'initial' ? 'Nobody buzzed. Reveal the hint for a second chance, or skip.' : '')}
             {ph === 'answering' && (live.timeUp ? "Time's up — mark No answer (team loses 1 point; opposition gets a steal chance)." : 'Listen to the answer, then mark it.')}
-            {ph === 'steal' && (live.timeUp ? "Steal time's up — mark No answer." : 'Opposition is answering on the steal.')}
+            {ph === 'steal' && (live.timeUp ? "Steal time's up — mark No answer (no penalty for the steal)." : 'Opposition is answering on the steal.')}
             {ph === 'resolved' && (last ? (tied ? 'Scores are tied — play a tiebreaker or choose a winner.' : 'Last question done — end the battle.') : 'Reveal the answer if you like, then move to the next question.')}
           </div>
         </div>

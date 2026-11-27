@@ -110,7 +110,7 @@ test('scoring rules: wrong and timeout penalties, steals, hint stage, and skips'
   assert.deepEqual([b.scoreA, b.scoreB], [0, 1]);
   assert.deepEqual([b.questionResults[1].pointsA, b.questionResults[1].pointsB], [-1, 1]);
 
-  // Q3: B's timeout and A's failed steal both cost one point.
+  // Q3: B's timeout costs one point; A's failed steal has no scoring effect.
   await cmd('battle.next');
   await openBuzzers();
   await cmd('battle.buzz', { side: 'B' });
@@ -119,9 +119,12 @@ test('scoring rules: wrong and timeout penalties, steals, hint stage, and skips'
   assert.deepEqual([b.scoreA, b.scoreB], [0, 0]);
   await cmd('battle.mark', { result: 'wrong' });
   b = await Battle.findById(battle._id);
-  assert.deepEqual([b.scoreA, b.scoreB], [-1, 0]);
-  assert.deepEqual([b.questionResults[2].pointsA, b.questionResults[2].pointsB], [-1, -1]);
+  assert.deepEqual([b.scoreA, b.scoreB], [0, 0]);
+  assert.deepEqual([b.questionResults[2].pointsA, b.questionResults[2].pointsB], [0, -1]);
   assert.equal((await live()).outcome, 'steal_failed');
+  const missedSteal = await AnswerAttempt.findOne({ battle: battle._id, questionIndex: 2, kind: 'steal' }).lean();
+  assert.equal(missedSteal.pointsAwarded, 0);
+  assert.equal(missedSteal.beneficiary, null);
 
   // Q4: a wrong answer after the hint is penalized, without a steal or opponent points.
   await cmd('battle.next');
@@ -139,7 +142,7 @@ test('scoring rules: wrong and timeout penalties, steals, hint stage, and skips'
   await cmd('battle.mark', { result: 'wrong' });
   assert.equal((await live()).phase, 'resolved');
   b = await Battle.findById(battle._id);
-  assert.deepEqual([b.scoreA, b.scoreB], [-2, 0]);
+  assert.deepEqual([b.scoreA, b.scoreB], [-1, 0]);
   assert.deepEqual([b.questionResults[3].pointsA, b.questionResults[3].pointsB], [-1, 0]);
 
   // Q5: nobody buzzes, hint, nobody buzzes again → skipped, no points
@@ -154,16 +157,16 @@ test('scoring rules: wrong and timeout penalties, steals, hint stage, and skips'
   assert.equal(l5.phase, 'resolved');
   assert.equal(l5.outcome, 'skipped_no_buzz');
   b = await Battle.findById(battle._id);
-  assert.deepEqual([b.scoreA, b.scoreB], [-2, 0]);
+  assert.deepEqual([b.scoreA, b.scoreB], [-1, 0]);
 
-  // End: B wins 0–(-2)
+  // End: B wins 0–(-1)
   await assert.rejects(cmd('battle.next'), /last question/);
   await cmd('battle.end');
   b = await Battle.findById(battle._id);
   assert.equal(String(b.winner), String(b.teamB));
   assert.equal((await Team.findById(b.teamB)).status, 'qualified');
   assert.equal((await Team.findById(b.teamA)).status, 'eliminated');
-  assert.equal((await Team.findById(b.teamA)).totalScore, -2);
+  assert.equal((await Team.findById(b.teamA)).totalScore, -1);
   assert.equal((await Team.findById(b.teamB)).totalScore, 0);
 
   const lb = await roundLeaderboard();

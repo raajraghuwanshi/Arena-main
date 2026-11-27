@@ -127,7 +127,7 @@ export default function Settings() {
             Give the opposition a steal chance after a wrong answer in the hint round too
           </label>
           <p className="tiny muted" style={{ marginTop: 8 }}>
-            Rules: correct +1 · wrong or no answer -1 for that team · opposition may steal and scores +1 only if correct · nobody buzzes → host may reveal one hint and reopen buzzers · nobody buzzes after the hint → skipped, no points.
+            Rules: correct +1 · wrong or no answer on the first buzz -1 · a steal has no penalty and scores +1 only if correct · nobody buzzes → host may reveal one hint and reopen buzzers · nobody buzzes after the hint → skipped, no points.
           </p>
         </div>
 

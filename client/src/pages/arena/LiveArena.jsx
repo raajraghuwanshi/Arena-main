@@ -217,7 +217,7 @@ const FX_OVERLAY = {
   correct: (fx, t) => ({ text: fx.steal ? 'STOLEN!' : 'CORRECT!', sub: `+1 ${t(fx.teamId)}`, tone: 'good' }),
   wrong: (fx, t) => ({
     text: fx.stealFailed ? 'STEAL MISSED!' : fx.timeout ? "TIME'S UP!" : 'WRONG!',
-    sub: `-1 ${t(fx.teamId)}${fx.steal ? ` · ${t(fx.stealTeamId)} gets a steal chance` : ''}`,
+    sub: fx.stealFailed ? 'No points awarded' : `-1 ${t(fx.teamId)}${fx.steal ? ` · ${t(fx.stealTeamId)} gets a steal chance` : ''}`,
     tone: 'bad',
   }),
   timeUp: () => ({ text: "TIME'S UP!", sub: 'Waiting for the host…', tone: 'warn' }),

@@ -306,11 +306,11 @@ export async function markResult({ result, actionId } = {}, ctx) {
     );
     emitFx({ type: 'wrong', teamId: idStr(team), side: sideOf(battle, team), points: -1, stealTeamId: idStr(opp), timeout: result === 'timeout', steal: allowSteal });
   } else {
-    await recordAttempt({ ...base, beneficiary: team, kind: 'steal', answer: result, points: -1 });
+    await recordAttempt({ ...base, beneficiary: null, kind: 'steal', answer: result, points: 0 });
     await resolveQuestion(battle, 'steal_failed');
     await save(battle);
-    await logEvent(t, 'wrong_answer', `${qLabel}: ${n(team)} missed the steal (-1)`, { battleId: battle._id, teamId: team, beneficiary: team }, ctx);
-    emitFx({ type: 'wrong', teamId: idStr(team), side: sideOf(battle, team), points: -1, steal: false, stealFailed: true, timeout: result === 'timeout' });
+    await logEvent(t, 'wrong_answer', `${qLabel}: ${n(team)} missed the steal — no points awarded`, { battleId: battle._id, teamId: team }, ctx);
+    emitFx({ type: 'wrong', teamId: idStr(team), side: sideOf(battle, team), steal: false, stealFailed: true, timeout: result === 'timeout' });
   }
   emitLeaderboardChanged();
   return { scoreA: battle.scoreA, scoreB: battle.scoreB };
