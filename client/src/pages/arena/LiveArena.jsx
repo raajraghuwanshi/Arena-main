@@ -216,8 +216,8 @@ function LeaderboardScene({ type }) {
 const FX_OVERLAY = {
   correct: (fx, t) => ({ text: fx.steal ? 'STOLEN!' : 'CORRECT!', sub: `+1 ${t(fx.teamId)}`, tone: 'good' }),
   wrong: (fx, t) => ({
-    text: fx.timeout ? "TIME'S UP!" : 'WRONG!',
-    sub: fx.penaltyTo ? `+1 ${t(fx.penaltyTo)}${fx.steal ? ' · steal chance!' : ''}` : fx.stealFailed ? 'No extra points' : '',
+    text: fx.stealFailed ? 'STEAL MISSED!' : fx.timeout ? "TIME'S UP!" : 'WRONG!',
+    sub: `-1 ${t(fx.teamId)}${fx.steal ? ` · ${t(fx.stealTeamId)} gets a steal chance` : ''}`,
     tone: 'bad',
   }),
   timeUp: () => ({ text: "TIME'S UP!", sub: 'Waiting for the host…', tone: 'warn' }),

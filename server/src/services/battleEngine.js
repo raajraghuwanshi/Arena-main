@@ -11,11 +11,11 @@ import { scheduleTimer, clearBattleTimer, setExpiryHandler } from './timer.js';
  *
  *  ready ──show──▶ question ──start timer──▶ buzz_open(initial)
  *  buzz_open ──buzz──▶ answering ──correct──▶ resolved (+1 answering team)
- *                          └─wrong/timeout──▶ (+1 opposition) steal ──correct──▶ resolved (+1 opposition)
- *                                                                └─wrong/none──▶ resolved (no points)
+ *                          └─wrong/timeout──▶ (-1 answering team) steal ──correct──▶ resolved (+1 opposition)
+ *                                                                └─wrong/none──▶ resolved (-1 stealing team)
  *  buzz_open(initial) ──10s, nobody──▶ no_buzz ──reveal hint──▶ buzz_open(hint)
  *  buzz_open(hint)    ──10s, nobody──▶ resolved (skipped, no points)
- *  answering (hint stage) wrong/timeout ──▶ +1 opposition, resolved (steal only if stealAfterHint)
+ *  answering (hint stage) wrong/timeout ──▶ -1 answering team, resolved (steal only if stealAfterHint)
  *  resolved ──next──▶ ready (next question)   resolved(last) ──end──▶ finished
  */
 
@@ -286,7 +286,7 @@ export async function markResult({ result, actionId } = {}, ctx) {
     await logEvent(t, 'correct_answer', `${qLabel}: ${n(team)} answered correctly${isSteal ? ' on the steal' : ''} (+1)`, { battleId: battle._id, teamId: team }, ctx);
     emitFx({ type: 'correct', teamId: idStr(team), side: sideOf(battle, team), points: 1, steal: isSteal });
   } else if (!isSteal) {
-    await recordAttempt({ ...base, beneficiary: opp, kind: 'answer', answer: result, points: 1 });
+    await recordAttempt({ ...base, beneficiary: team, kind: 'answer', answer: result, points: -1 });
     const allowSteal = live.stage === 'initial' || battle.config.stealAfterHint;
     if (allowSteal) {
       live.answeringTeam = opp;
@@ -300,17 +300,17 @@ export async function markResult({ result, actionId } = {}, ctx) {
     await logEvent(
       t,
       'wrong_answer',
-      `${qLabel}: ${n(team)} ${result === 'timeout' ? 'did not answer in time' : 'answered wrong'} — ${n(opp)} +1${allowSteal ? ', steal chance' : ''}`,
-      { battleId: battle._id, teamId: team, beneficiary: opp },
+      `${qLabel}: ${n(team)} ${result === 'timeout' ? 'did not answer in time' : 'answered wrong'} (-1)${allowSteal ? ` — ${n(opp)} gets a steal chance` : ''}`,
+      { battleId: battle._id, teamId: team, beneficiary: team },
       ctx
     );
-    emitFx({ type: 'wrong', teamId: idStr(team), side: sideOf(battle, team), penaltyTo: idStr(opp), timeout: result === 'timeout', steal: allowSteal });
+    emitFx({ type: 'wrong', teamId: idStr(team), side: sideOf(battle, team), points: -1, stealTeamId: idStr(opp), timeout: result === 'timeout', steal: allowSteal });
   } else {
-    await recordAttempt({ ...base, beneficiary: null, kind: 'steal', answer: result, points: 0 });
+    await recordAttempt({ ...base, beneficiary: team, kind: 'steal', answer: result, points: -1 });
     await resolveQuestion(battle, 'steal_failed');
     await save(battle);
-    await logEvent(t, 'wrong_answer', `${qLabel}: ${n(team)} missed the steal — no extra points`, { battleId: battle._id, teamId: team }, ctx);
-    emitFx({ type: 'wrong', teamId: idStr(team), side: sideOf(battle, team), steal: false, stealFailed: true, timeout: result === 'timeout' });
+    await logEvent(t, 'wrong_answer', `${qLabel}: ${n(team)} missed the steal (-1)`, { battleId: battle._id, teamId: team, beneficiary: team }, ctx);
+    emitFx({ type: 'wrong', teamId: idStr(team), side: sideOf(battle, team), points: -1, steal: false, stealFailed: true, timeout: result === 'timeout' });
   }
   emitLeaderboardChanged();
   return { scoreA: battle.scoreA, scoreB: battle.scoreB };
@@ -425,8 +425,6 @@ export async function adjustScore({ teamId, delta, reason, actionId } = {}, ctx)
   assert(Number.isInteger(d) && d !== 0 && Math.abs(d) <= 5, 'Adjustment must be between -5 and +5.');
   assert(reason?.trim(), 'A reason is required for score adjustments.');
   assert(sideOf(battle, teamId), 'That team is not in this battle.');
-  const current = idEq(teamId, battle.teamA) ? battle.scoreA : battle.scoreB;
-  assert(current + d >= 0, 'A battle score cannot go below zero.');
   await recordAttempt({ t, round, battle, ctx, actionId, team: null, beneficiary: teamId, kind: 'adjustment', answer: 'adjustment', points: d, attemptNumber: 0, reason: reason.trim() });
   await save(battle);
   const n = await names(battle);

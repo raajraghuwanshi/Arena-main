@@ -10,7 +10,7 @@ const attemptSchema = new mongoose.Schema(
     question: { type: ObjectId, ref: 'Question', default: null },
     questionIndex: { type: Number, default: null },
     team: { type: ObjectId, ref: 'Team', default: null }, // team that answered (null for adjustments)
-    beneficiary: { type: ObjectId, ref: 'Team', default: null }, // team that received the points
+    beneficiary: { type: ObjectId, ref: 'Team', default: null }, // team whose score changed
     kind: { type: String, enum: ['answer', 'steal', 'adjustment'], required: true },
     answer: { type: String, enum: ['correct', 'wrong', 'timeout', 'adjustment'], required: true },
     isCorrect: { type: Boolean, default: false },
