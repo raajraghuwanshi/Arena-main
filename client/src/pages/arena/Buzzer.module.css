@@ -33,9 +33,12 @@
   font-weight: 800;
   font-size: clamp(26px, 6vw, 56px);
   text-align: center;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .buzz {
   width: min(70vw, 60vh);
+  flex: 0 0 auto;
   aspect-ratio: 1;
   border-radius: 50%;
   border: 0;
@@ -52,7 +55,7 @@
   transition:
     background 0.2s,
     box-shadow 0.2s;
-  padding: 10%;
+  padding: clamp(16px, 3vw, 40px);
   text-align: center;
 }
 .open {
@@ -93,4 +96,17 @@
   max-width: 420px;
   text-align: center;
   color: #E9B3A5;
+}
+
+@media (min-width: 760px) {
+  .team {
+    font-size: clamp(30px, 4vw, 48px);
+  }
+  .buzz {
+    width: min(58vh, 52vw, 520px);
+  }
+  .idle,
+  .wait {
+    font-size: clamp(16px, 2.4vw, 28px);
+  }
 }
