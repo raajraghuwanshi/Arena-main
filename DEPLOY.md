@@ -105,9 +105,10 @@ If the site shows **"Cannot GET /"** or **"The server is running, but the websit
 
 Socket.IO needs a persistent Node server; Vercel's serverless client deployment is not the Socket.IO server. Keep the backend on Render and configure the separate Vercel client to connect directly to it:
 
-1. In the Render service's **Environment**, set `CLIENT_ORIGIN` to your exact Vercel site origin (for example, `https://arena-main-neon.vercel.app`). For multiple client origins, separate them with commas.
-2. In Vercel's project **Environment Variables**, set `VITE_API_URL` to the Render service's origin (for example, `https://buzz-or-lose-arena.onrender.com`), with no trailing slash and no `/api`.
-3. Redeploy both services so the CORS and client build-time settings take effect.
+1. Import the repository in Vercel and leave **Root Directory** as the repository root. `vercel.json` installs and builds the client app and rewrites browser routes to its `index.html`. If the project already uses `client` as its root directory, `client/vercel.json` provides the same browser-route fallback.
+2. In the Render service's **Environment**, set `CLIENT_ORIGIN` to your exact Vercel site origin (for example, `https://arena-main-neon.vercel.app`). For multiple client origins, separate them with commas.
+3. In Vercel's project **Environment Variables**, set `VITE_API_URL` to the Render service's origin (for example, `https://buzz-or-lose-arena.onrender.com`), with no trailing slash and no `/api`.
+4. Redeploy both services so the CORS and client build-time settings take effect.
 
 Without `VITE_API_URL`, the client uses its own origin for API and Socket.IO connections, which only works when the backend is served from that same origin.
 
